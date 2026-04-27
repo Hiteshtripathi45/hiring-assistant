@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HireAI — Smart Hiring Assistant</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #6c63ff;
+    --accent2: #ff6b6b;
+    --accent3: #43e97b;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --card-glow: rgba(108, 99, 255, 0.08);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(108,99,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(108,99,255,0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; z-index: 1; }
+
+  /* Header */
+  header {
+    padding: 28px 0 20px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+
+  .logo span {
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .api-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--accent3);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 36px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    width: fit-content;
+  }
+
+  .tab {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .tab.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Panel */
+  .panel { display: none; }
+  .panel.active { display: block; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 28px;
+    margin-bottom: 20px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    opacity: 0.3;
+  }
+
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 48px 32px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .upload-zone:hover, .upload-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(108, 99, 255, 0.05);
+  }
+
+  .upload-zone input[type="file"] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .upload-icon {
+    font-size: 36px;
+    margin-bottom: 12px;
+  }
+
+  .upload-text {
+    font-family: 'Syne', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .upload-sub {
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  /* Forms */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group.full { grid-column: 1 / -1; }
+
+  label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  input, textarea {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s;
+    width: 100%;
+  }
+
+  textarea { resize: vertical; min-height: 90px; }
+
+  input:focus, textarea:focus {
+    border-color: var(--accent);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: var(--muted);
+    opacity: 0.6;
+  }
+
+  /* Buttons */
+  .btn {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    padding: 12px 28px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { background: #7c75ff; transform: translateY(-1px); }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--accent2);
+    border: 1px solid var(--accent2);
+    font-size: 12px;
+    padding: 6px 14px;
+  }
+
+  /* Status */
+  .status {
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-top: 16px;
+    display: none;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .status.show { display: flex; }
+  .status.success { background: rgba(67, 233, 123, 0.1); border: 1px solid rgba(67, 233, 123, 0.3); color: var(--accent3); }
+  .status.error { background: rgba(255, 107, 107, 0.1); border: 1px solid rgba(255, 107, 107, 0.3); color: var(--accent2); }
+  .status.loading { background: rgba(108, 99, 255, 0.1); border: 1px solid rgba(108, 99, 255, 0.3); color: var(--accent); }
+
+  /* Candidates list */
+  .candidates-list { display: flex; flex-direction: column; gap: 12px; }
+
+  .candidate-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+
+  .candidate-name {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .candidate-meta {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .skills-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .chip.accent { border-color: var(--accent); color: var(--accent); background: rgba(108,99,255,0.08); }
+  .chip.green { border-color: var(--accent3); color: var(--accent3); background: rgba(67,233,123,0.08); }
+  .chip.red { border-color: var(--accent2); color: var(--accent2); background: rgba(255,107,107,0.08); }
+
+  /* Ranking cards */
+  .rank-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 24px;
+    margin-bottom: 14px;
+    position: relative;
+  }
+
+  .rank-card.top-rank {
+    border-color: var(--accent);
+    box-shadow: 0 0 20px rgba(108,99,255,0.15);
+  }
+
+  .rank-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+
+  .rank-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--border);
+    line-height: 1;
+    margin-right: 12px;
+    min-width: 32px;
+  }
+
+  .rank-card.top-rank .rank-number { color: var(--accent); }
+
+  .score-circle {
+    text-align: center;
+    min-width: 64px;
+  }
+
+  .score-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .score-label {
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .score-bar-wrap { margin: 14px 0 10px; }
+
+  .score-bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .score-bar {
+    height: 5px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--accent), #a78bfa);
+    transition: width 0.8s ease;
+  }
+
+  .recommendation-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  .rec-strong { background: rgba(67,233,123,0.15); color: var(--accent3); border: 1px solid rgba(67,233,123,0.3); }
+  .rec-hire { background: rgba(108,99,255,0.15); color: var(--accent); border: 1px solid rgba(108,99,255,0.3); }
+  .rec-maybe { background: rgba(255,180,0,0.15); color: #ffb400; border: 1px solid rgba(255,180,0,0.3); }
+  .rec-reject { background: rgba(255,107,107,0.15); color: var(--accent2); border: 1px solid rgba(255,107,107,0.3); }
+
+  .reasoning-text {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* Stats row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    background: linear-gradient(135deg, var(--accent), #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  /* Loading spinner */
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid rgba(108,99,255,0.3);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 48px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .empty-icon { font-size: 40px; margin-bottom: 12px; }
+
+  /* API URL bar */
+  .api-url-bar {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .method { color: var(--accent3); font-weight: 500; }
+
+  @media (max-width: 640px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .stats-row { grid-template-columns: 1fr; }
+    .rank-header { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <div class="header-inner">
+      <div class="logo">Hire<span>AI</span></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="api-badge">● API CONNECTED</div>
+        <input id="apiUrl" style="width:200px;font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px" 
+               placeholder="http://localhost:8000" value="http://localhost:8000">
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('upload')">📄 Upload Resume</button>
+    <button class="tab" onclick="switchTab('candidates')">👥 Candidates</button>
+    <button class="tab" onclick="switchTab('rank')">🏆 Rank & Evaluate</button>
+  </div>
+
+  <!-- UPLOAD PANEL -->
+  <div id="panel-upload" class="panel active">
+    <div class="card">
+      <div class="card-title">Upload Candidate Resume</div>
+
+      <!-- <div class="api-url-bar">
+        <span class="method">POST</span>
+        <span>/api/v1/candidates/upload</span>
+      </div> -->
+
+      <div class="upload-zone" id="uploadZone">
+        <input type="file" id="fileInput" accept=".pdf,.txt" onchange="handleFileSelect(this)">
+        <div class="upload-icon">📎</div>
+        <div class="upload-text" id="uploadText">Drop resume here or click to browse</div>
+        <div class="upload-sub">Supports PDF and TXT • Max 5MB</div>
+      </div>
+
+      <div id="uploadStatus" class="status"></div>
+
+      <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="uploadResume()" id="uploadBtn" disabled>
+          ⚡ Parse Resume
+        </button>
+      </div>
+    </div>
+
+    <!-- Parsed result preview -->
+    <div class="card" id="parsedPreview" style="display:none">
+      <div class="card-title">✅ Parsed Result</div>
+      <div id="parsedContent"></div>
+    </div>
+  </div>
+
+  <!-- CANDIDATES PANEL -->
+  <div id="panel-candidates" class="panel">
+    <div class="stats-row" id="statsRow">
+      <div class="stat-card">
+        <div class="stat-val" id="statTotal">0</div>
+        <div class="stat-label">Total Candidates</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statSenior">0</div>
+        <div class="stat-label">Senior+</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-val" id="statAvgExp">0</div>
+        <div class="stat-label">Avg. Experience (yrs)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div class="card-title" style="margin:0">All Candidates</div>
+        <button class="btn btn-primary" style="padding:8px 18px;font-size:13px" onclick="loadCandidates()">↻ Refresh</button>
+      </div>
+      <div id="candidatesList">
+        <div class="empty-state">
+          <div class="empty-icon">👤</div>
+          Click Refresh to load candidates
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RANK PANEL -->
+  <div id="panel-rank" class="panel">
+    <div class="card">
+      <div class="card-title">Job Description</div>
+
+      <div class="api-url-bar">
+        <span class="method">POST</span>
+        <span>/api/v1/candidates/rank</span>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Job Title</label>
+          <input id="jobTitle" placeholder="e.g. Senior Backend Engineer">
+        </div>
+        <div class="form-group">
+          <label>Min. Experience (years)</label>
+          <input id="minExp" type="number" value="2" min="0" max="20">
+        </div>
+        <div class="form-group">
+          <label>Required Skills (comma-separated)</label>
+          <input id="reqSkills" placeholder="Python, FastAPI, PostgreSQL, Docker">
+        </div>
+        <div class="form-group">
+          <label>Preferred Skills (comma-separated)</label>
+          <input id="prefSkills" placeholder="Redis, Kubernetes, AWS">
+        </div>
+        <div class="form-group full">
+          <label>Job Description</label>
+          <textarea id="jobDesc" placeholder="Describe the role, responsibilities, and what you're looking for..."></textarea>
+        </div>
+      </div>
+
+      <div id="rankStatus" class="status"></div>
+
+      <div style="margin-top:20px;display:flex;justify-content:flex-end;">
+        <button class="btn btn-primary" onclick="rankCandidates()" id="rankBtn">
+          🏆 Rank Candidates
+        </button>
+      </div>
+    </div>
+
+    <div id="rankResults"></div>
+  </div>
+</div>
+
+<script>
+  let selectedFile = null;
+
+  function getApiUrl() {
+    return document.getElementById('apiUrl').value.replace(/\/$/, '');
+  }
+
+  function switchTab(tab) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', ['upload','candidates','rank'][i] === tab);
+    });
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    document.getElementById(`panel-${tab}`).classList.add('active');
+    if (tab === 'candidates') loadCandidates();
+  }
+
+  function showStatus(id, type, msg) {
+    const el = document.getElementById(id);
+    el.className = `status show ${type}`;
+    el.innerHTML = type === 'loading' 
+      ? `<span class="spinner"></span> ${msg}` 
+      : `<span>${type === 'success' ? '✓' : '✗'}</span> ${msg}`;
+  }
+
+  function hideStatus(id) {
+    document.getElementById(id).className = 'status';
+  }
+
+  function handleFileSelect(input) {
+    selectedFile = input.files[0];
+    if (selectedFile) {
+      document.getElementById('uploadText').textContent = `📄 ${selectedFile.name}`;
+      document.getElementById('uploadBtn').disabled = false;
+    }
+  }
+
+  async function uploadResume() {
+    if (!selectedFile) return;
+    const btn = document.getElementById('uploadBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Parsing...';
+    showStatus('uploadStatus', 'loading', 'Uploading and parsing resume with AI...');
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    try {
+      const res = await fetch(`${getApiUrl()}/api/v1/candidates/upload`, {
+        method: 'POST', body: form
+      });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Upload failed');
+
+      showStatus('uploadStatus', 'success', `Parsed successfully! Candidate ID: ${data.candidate_id}`);
+      renderParsed(data.parsed_data);
+      selectedFile = null;
+      document.getElementById('fileInput').value = '';
+      document.getElementById('uploadText').textContent = 'Drop resume here or click to browse';
+    } catch (e) {
+      showStatus('uploadStatus', 'error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Parse Resume';
+    }
+  }
+
+  function renderParsed(p) {
+    const preview = document.getElementById('parsedPreview');
+    const content = document.getElementById('parsedContent');
+    preview.style.display = 'block';
+
+    const levelColor = { junior: 'chip', mid: 'chip accent', senior: 'chip green', lead: 'chip green' };
+
+    content.innerHTML = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800">${p.name}</div>
+          <div style="font-size:13px;color:var(--muted);margin-top:4px;font-family:'DM Mono',monospace">
+            ${p.email || '—'} · ${p.phone || '—'}
+          </div>
+        </div>
+        <div style="text-align:right">
+          <span class="${levelColor[p.experience_level] || 'chip'}">${p.experience_level}</span>
+          <div style="font-size:13px;color:var(--muted);margin-top:6px">${p.experience_years} years exp.</div>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:16px">${p.summary || ''}</div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;font-family:'DM Mono',monospace">Skills</div>
+        <div class="skills-chips">${p.skills.map(s => `<span class="chip accent">${s}</span>`).join('')}</div>
+      </div>
+      <div>
+        <div style="font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;font-family:'DM Mono',monospace">Education</div>
+        <div class="skills-chips">${p.education.map(e => `<span class="chip">${e}</span>`).join('')}</div>
+      </div>
+    `;
+  }
+
+  async function loadCandidates() {
+    const list = document.getElementById('candidatesList');
+    list.innerHTML = '<div class="empty-state"><span class="spinner"></span></div>';
+
+    try {
+      const res = await fetch(`${getApiUrl()}/api/v1/candidates`);
+      const data = await res.json();
+
+      document.getElementById('statTotal').textContent = data.total;
+
+      const seniors = data.candidates.filter(c => c.experience_years >= 5).length;
+      document.getElementById('statSenior').textContent = seniors;
+
+      const avgExp = data.total > 0 
+        ? (data.candidates.reduce((a, c) => a + c.experience_years, 0) / data.total).toFixed(1)
+        : 0;
+      document.getElementById('statAvgExp').textContent = avgExp;
+
+      if (data.candidates.length === 0) {
+        list.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div>No candidates yet. Upload some resumes first.</div>';
+        return;
+      }
+
+      list.innerHTML = `<div class="candidates-list">${data.candidates.map(c => `
+        <div class="candidate-item">
+          <div style="flex:1">
+            <div class="candidate-name">${c.name}</div>
+            <div class="candidate-meta">${c.experience_years} yrs · ID: ${c.id}</div>
+            <div class="skills-chips">${c.skills.slice(0,5).map(s => `<span class="chip accent">${s}</span>`).join('')}${c.skills.length > 5 ? `<span class="chip">+${c.skills.length - 5}</span>` : ''}</div>
+          </div>
+        </div>
+      `).join('')}</div>`;
+    } catch (e) {
+      list.innerHTML = `<div class="empty-state" style="color:var(--accent2)">⚠ Could not connect to API. Make sure the server is running.</div>`;
+    }
+  }
+
+  async function rankCandidates() {
+    const title = document.getElementById('jobTitle').value.trim();
+    const desc = document.getElementById('jobDesc').value.trim();
+    const reqSkills = document.getElementById('reqSkills').value.trim();
+    const prefSkills = document.getElementById('prefSkills').value.trim();
+    const minExp = document.getElementById('minExp').value;
+
+    if (!title || !reqSkills) {
+      showStatus('rankStatus', 'error', 'Job title and required skills are mandatory.');
+      return;
+    }
+
+    const btn = document.getElementById('rankBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Ranking...';
+    showStatus('rankStatus', 'loading', 'AI is evaluating and ranking all candidates...');
+    document.getElementById('rankResults').innerHTML = '';
+
+    const params = new URLSearchParams({
+      job_title: title,
+      job_description: desc || title,
+      required_skills: reqSkills,
+      preferred_skills: prefSkills,
+      min_experience_years: minExp,
+    });
+
+    try {
+      const res = await fetch(`${getApiUrl()}/api/v1/candidates/rank?${params}`, { method: 'POST' });
+      const data = await res.json();
+
+      if (!res.ok) throw new Error(data.detail || 'Ranking failed');
+
+      hideStatus('rankStatus');
+      renderRankings(data);
+    } catch (e) {
+      showStatus('rankStatus', 'error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '🏆 Rank Candidates';
+    }
+  }
+
+  function recClass(rec) {
+    if (!rec) return 'rec-maybe';
+    const r = rec.toLowerCase();
+    if (r.includes('strong')) return 'rec-strong';
+    if (r.includes('hire') && !r.includes('strong')) return 'rec-hire';
+    if (r.includes('maybe')) return 'rec-maybe';
+    return 'rec-reject';
+  }
+
+  function scoreColor(score) {
+    if (score >= 80) return 'var(--accent3)';
+    if (score >= 60) return 'var(--accent)';
+    if (score >= 40) return '#ffb400';
+    return 'var(--accent2)';
+  }
+
+  function renderRankings(data) {
+    const container = document.getElementById('rankResults');
+
+    const summary = `
+      <div class="card" style="background:linear-gradient(135deg,rgba(108,99,255,0.1),rgba(108,99,255,0.02))">
+        <div class="card-title">🏆 Top Recommendation</div>
+        <div style="font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:var(--accent)">${data.top_recommendation}</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:6px">${data.total_candidates} candidates evaluated for <strong style="color:var(--text)">${data.job_title}</strong></div>
+      </div>
+    `;
+
+    const rankings = data.ranked_candidates.map((c, i) => `
+      <div class="rank-card ${i === 0 ? 'top-rank' : ''}">
+        <div class="rank-header">
+          <div style="display:flex;align-items:flex-start;flex:1">
+            <div class="rank-number">#${i+1}</div>
+            <div style="flex:1">
+              <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+                <span style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700">${c.candidate_name}</span>
+                <span class="recommendation-badge ${recClass(c.recommendation)}">${c.recommendation}</span>
+              </div>
+              <div class="score-bar-wrap">
+                <div class="score-bar-label"><span>Skill Match</span><span>${c.skill_match_score.toFixed(0)}%</span></div>
+                <div class="score-bar"><div class="score-bar-fill" style="width:${c.skill_match_score}%"></div></div>
+                <div class="score-bar-label"><span>Experience</span><span>${c.experience_score.toFixed(0)}%</span></div>
+                <div class="score-bar"><div class="score-bar-fill" style="width:${c.experience_score}%;background:linear-gradient(90deg,var(--accent3),#20bf6b)"></div></div>
+              </div>
+              <div class="skills-chips">
+                ${c.matched_skills.slice(0,4).map(s => `<span class="chip green">✓ ${s}</span>`).join('')}
+                ${c.missing_skills.slice(0,3).map(s => `<span class="chip red">✗ ${s}</span>`).join('')}
+                ${c.bonus_skills.slice(0,2).map(s => `<span class="chip accent">★ ${s}</span>`).join('')}
+              </div>
+            </div>
+          </div>
+          <div class="score-circle">
+            <div class="score-val" style="color:${scoreColor(c.overall_score)}">${c.overall_score.toFixed(0)}</div>
+            <div class="score-label">Score</div>
+          </div>
+        </div>
+        <div class="reasoning-text">${c.reasoning}</div>
+      </div>
+    `).join('');
+
+    container.innerHTML = summary + rankings;
+  }
+
+  document.getElementById('uploadZone').addEventListener('dragover', (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.add('drag-over');
+  });
+  document.getElementById('uploadZone').addEventListener('dragleave', (e) => {
+    e.currentTarget.classList.remove('drag-over');
+  });
+  document.getElementById('uploadZone').addEventListener('drop', (e) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      selectedFile = file;
+      document.getElementById('uploadText').textContent = `📄 ${file.name}`;
+      document.getElementById('uploadBtn').disabled = false;
+    }
+  });
+</script>
+</body>
+</html>
