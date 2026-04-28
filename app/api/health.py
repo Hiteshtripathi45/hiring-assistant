@@ -14,7 +14,7 @@ async def health_check():
     }
 
 
-@router.get("/")
+@router.get("/health/root")
 async def root():
     return {
         "message": "🤖 AI Hiring Assistant API",
