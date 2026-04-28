@@ -517,7 +517,7 @@
       <div style="display:flex;align-items:center;gap:12px">
         <div class="api-badge">● API CONNECTED</div>
         <input id="apiUrl" style="width:200px;font-family:'DM Mono',monospace;font-size:11px;padding:5px 10px" 
-               placeholder="http://localhost:8000" value="http://localhost:8000">
+               placeholder="http://localhost:8000" value="">
       </div>
     </div>
   </header>
@@ -642,8 +642,8 @@
   let selectedFile = null;
 
   function getApiUrl() {
-    return document.getElementById('apiUrl').value.replace(/\/$/, '');
-  }
+  return window.location.origin;
+}
 
   function switchTab(tab) {
     document.querySelectorAll('.tab').forEach((t, i) => {

@@ -1,9 +1,14 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-
+from fastapi.responses import HTMLResponse
 from app.api import candidates, jobs, health
 from app.core.config import settings
+
+
+from fastapi.templating import Jinja2Templates
+from fastapi import Request
+import os
 
 
 @asynccontextmanager
@@ -31,3 +36,11 @@ app.add_middleware(
 app.include_router(health.router, tags=["Health"])
 app.include_router(candidates.router, prefix="/api/v1", tags=["Candidates"])
 app.include_router(jobs.router, prefix="/api/v1", tags=["Jobs"])
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "frontend"))
+
+@app.get("/", response_class=HTMLResponse)
+async def serve_frontend(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
