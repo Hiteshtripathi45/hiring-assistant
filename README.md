@@ -185,20 +185,5 @@ hiring-assistant/
 └── README.md
 ```
 
----
 
-## 🔮 Future Improvements (for your resume talking points)
-
-- [ ] PostgreSQL + SQLAlchemy for persistent storage
-- [ ] ChromaDB/Qdrant for vector similarity search
-- [ ] Background task queue (Celery + Redis) for async processing
-- [ ] JWT authentication
-- [ ] Bulk resume upload
-- [ ] AI-generated interview questions per candidate
-- [ ] Email notifications
-
----
-
-## 🤝 Contributing
-
-PRs welcome! Built by [Your Name] — connect on LinkedIn.
+PRs welcome! Built by hitesh tripathi — https://www.linkedin.com/in/hitesh-tripathi-167262402/?skipRedirect=true
