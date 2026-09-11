@@ -56,6 +56,21 @@ class ResumeUploadResponse(BaseModel):
     parsed_data: ParsedResume
 
 
+class CandidateActionResult(BaseModel):
+    candidate_name: str
+    qa_review: str
+    action_taken: str 
+    detail: dict = {}
+
+
+class RankAndActResult(BaseModel):
+    job_title: str
+    total_candidates: int
+    ranked_candidates: list[CandidateScore]
+    actions: list[CandidateActionResult]
+    review_queue_size: int
+
+
 class JobCreateRequest(BaseModel):
     title: str
     description: str
