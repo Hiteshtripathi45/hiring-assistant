@@ -8,3 +8,4 @@ venv/
 .DS_Store
 uploads/
 *.db
+generated_invites/
