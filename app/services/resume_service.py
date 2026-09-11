@@ -145,9 +145,10 @@ async def parse_resume(file_bytes: bytes, filename: str) -> ParsedResume:
     content = clean_json_response(content)
     
     data = json.loads(content)
-    data["raw_text"] = raw_text[:1000]  # Store first 1000 chars
+    data["raw_text"] = raw_text[:1000]  
 
-    return ParsedResume(**data)
+    parsed = ParsedResume(**data)
+    return parsed, raw_text  
 
 
 async def rank_candidates(
